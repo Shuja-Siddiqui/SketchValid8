@@ -2,6 +2,7 @@ const file_select = document.getElementById("file-select");
 const title = document.getElementById("title");
 const fileContentsDiv = document.getElementById("fileContents");
 const resizeContainer = document.getElementById("resizeContainer");
+const main = document.getElementById("main");
 
 let svgElement;
 let isResizing = false;
@@ -84,19 +85,37 @@ function handleResizing(e) {
   const deltaX = e.clientX - initialX;
   const deltaY = e.clientY - initialY;
 
-  // Update the width of the resizeContainer
+  // Update the width / height of the resizeContainer
   let newWidth = initialWidth + deltaX;
   let newHeight = initialHeight + deltaY;
 
+  // Limit the minimum height
   newHeight = Math.max(newHeight, 50);
+  // Limit the minimum width
   newWidth = Math.max(newWidth, 170);
 
   svgElement.setAttribute("width", newWidth);
   svgElement.setAttribute("height", newHeight);
 
-  // Set the new width
+  // Get the maximum allowed width and height based on the parent container (main)
+  const maxWidth = main.offsetWidth;
+  const maxHeight = main.offsetHeight;
+
+  // Limit the maximum width / height of child component
+  newWidth = Math.min(newWidth, maxWidth);
+  newHeight = Math.min(newHeight, maxHeight - 80);
+
+  // Set the new width / height
   resizeContainer.style.width = `${newWidth}px`;
   resizeContainer.style.height = `${newHeight + 80}px`;
+
+  // Limit the maximum height / width of child according to parent container
+  const svgMaxHeight = newHeight;
+  const svgMaxWidth = newWidth;
+
+  // Set the new width / height of svg
+  svgElement.setAttribute("height", svgMaxHeight);
+  svgElement.setAttribute("width", svgMaxWidth);
 }
 
 function stopResizing() {
@@ -110,4 +129,8 @@ function stopResizing() {
 document.addEventListener("DOMContentLoaded", function () {
   // Call handleSVGAttributes after DOMContentLoaded to handle SVG attributes
   handleSVGAttributes();
+});
+
+document.getElementById("html").addEventListener("change", (e) => {
+  resizeContainer.style.display = e.target.checked ? "block" : "none";
 });
