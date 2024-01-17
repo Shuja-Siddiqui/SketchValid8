@@ -1,6 +1,6 @@
 const { MSICreator } = require("electron-wix-msi");
 const path = require("path");
-const APP_DIR = path.resolve(__dirname, "./out/sketchvalid8-win32-x64");
+const APP_DIR = path.resolve(__dirname, "./SketchValid8-win32-x64");
 const OUT_DIR = path.resolve(__dirname, "./build");
 
 // Step 1: Instantiate the MSICreator
@@ -8,8 +8,8 @@ async function createMSI() {
   const msiCreator = new MSICreator({
     appDirectory: APP_DIR,
     description: "My amazing simulator",
-    exe: "sketchvalid8",
-    name: "sketchvalid8",
+    exe: "SketchValid8",
+    name: "SketchValid8",
     manufacturer: "Technologies",
     version: "1.1.2",
     outputDirectory: OUT_DIR,
