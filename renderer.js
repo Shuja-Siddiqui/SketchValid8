@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Elements
   const file = document.getElementById('file');
   const html = document.getElementById('html');
+  const css = document.getElementById('css');
+//   const json = document.getElementById('json');
+  const style = document.getElementById('style');
   const fileContent = document.getElementById('file-content');
   main = document.getElementById('main');
   html.addEventListener('change', (e) => {
@@ -115,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     adjustSize();
   };
   document.addEventListener('keydown', function (event) {
+    // Check if the key combination is 'Ctrl + Shift + A'
     if (event.ctrlKey && event.key === 'o') {
       file.click();
     }
@@ -123,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const readFiles = (e) => {
     if (e.target.files.length > 0) {
       const selectedFile = e.target.files[0];
+      const path = selectedFile.path;
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target.result;
@@ -132,6 +137,29 @@ document.addEventListener('DOMContentLoaded', () => {
         html.disabled = false;
       };
       reader.readAsText(selectedFile);
+      // Open associated CSS and JSON files
+      // Read CSS file contents - Uncomment code below
+      const cssFileName = path.replace(/\.html$/, '.css');
+      fetch(cssFileName)
+        .then((response) => response.text())
+        .then((cssContents) => (style.innerHTML = cssContents))
+        .catch(() => {
+          css.disabled = true;
+          css.checked = false;
+        });
+
+      // Read JSON file contents - Uncomment code below
+
+      //   const jsonFileName = path.replace(/\.html$/, '.json');
+      //   fetch(jsonFileName)
+      //     .then((response) => response.text())
+      //     .then((jsonContents) =>
+      //       console.log(`${jsonFileName} Contents:\n${jsonContents}`)
+      //     )
+      //     .catch(() => {
+      //       json.disabled = true;
+      //       json.checked = false;
+      //     });
     }
   };
 
