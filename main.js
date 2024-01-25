@@ -1,16 +1,20 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('node:path');
-
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+let win;
 const createWindow = () => {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    maximizable: false,
-    resizable: false,
+  win = new BrowserWindow({
+    width: 1024,
+    height: 800,
+    minWidth: 270,
+    minHeight: 270,
+    fullscreen: true,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
     },
   });
+  win.webContents.openDevTools();
   win.loadFile('index.html');
 };
 
@@ -24,5 +28,17 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+// Listen for the 'close-window' message from the renderer process
+ipcMain.on('close-window', () => {
+  if (win) {
+    win.close();
+  }
+});
+ipcMain.on('toggle-fullscreen', () => {
+  if (win) {
+    win.setFullScreen(!win.isFullScreen());
   }
 });

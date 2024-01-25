@@ -1,46 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="global.css" />
-  <title>SketchValid8</title>
-</head>
-
-<body>
-  <header>
-    <span id="title"></span>
-    <div class="switches">
-      <label for="html" class="switch">
-        <input type="checkbox" name="html" id="html" checked />
-        <span>HTML</span>
-      </label>
-      <label for="css" class="switch">
-        <input type="checkbox" name="css" id="css" />
-        <span>CSS</span>
-      </label>
-      <label for="json" class="switch">
-        <input type="checkbox" name="json" id="json" />
-        <span>JSON</span>
-      </label>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="global.css" />
+    <style id="style"></style>
+    <title>SketchValid8</title>
+  </head>
+  <body>
+    <div class="dragger">
+      <span class="title">SketchValid8</span>
+      <span></span>
+      <!-- <span class="title">TITLE <i><u>(.html, .css, .json)</u></i></span> -->
+      <div class="inline-btns">
+        <span title="Toggle Window Size" id="fullscreenButton" class="round-btn bg-green"></span>
+        <span title="Close" id="closeButton" class="round-btn bg-red"></span>
+      </div>
     </div>
-  </header>
-  <div class="file-select">
-    <label for="file-select">Select File</label>
-    <input type="file" name="file-select" id="file-select" accept=".html" />
-  </div>
-  <!-- <main>
-    <div id="fileContents"></div>
-  </main> -->
-
-  <main id="main">
-    <div id="resizeContainer">
-      <div id="fileContents"></div>
-    </div>
-  </main>
-  <script src="./renderer.js"></script>
-</body>
-
+    <header>
+      <label for="file" class="file">File</label>
+      <input
+        type="file"
+        name="file"
+        id="file"
+        style="display: none"
+        accept="text/html"
+      />
+      <div class="inline-checkbox">
+        <label for="html">
+          <input type="checkbox" name="html" id="html" disabled />
+          <span>HTML</span>
+        </label>
+        <label for="css">
+          <input type="checkbox" name="css" id="css" disabled />
+          <span>CSS</span>
+        </label>
+        <label for="json">
+          <input type="checkbox" name="json" id="json" disabled />
+          <span>JSON</span>
+        </label>
+      </div>
+    </header>
+    <main id="main">
+      <div id="file-content"></div>
+    </main>
+  </body>
 </html>
+<script src="renderer.js"></script>

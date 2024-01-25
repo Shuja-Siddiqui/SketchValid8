@@ -1,136 +1,139 @@
-const file_select = document.getElementById("file-select");
-const title = document.getElementById("title");
-const fileContentsDiv = document.getElementById("fileContents");
-const resizeContainer = document.getElementById("resizeContainer");
-const main = document.getElementById("main");
+const { ipcRenderer } = require('electron');
+const MM_TO_PX = 3.7795275591;
+let mySvg;
+let ORIGINAL_WIDTH;
+let ORIGINAL_HEIGHT;
+let main;
 
-let svgElement;
-let isResizing = false;
-let initialX, initialY, initialWidth, initialHeight;
-
-file_select.addEventListener("change", (e) => {
-  if (e.target.files.length > 0) {
-    const selectedFile = e.target.files[0];
-    const fileName = selectedFile.name;
-    const partialFileName = e.target.files[0].name.toString().split(".");
-    partialFileName.pop();
-    title.innerText = partialFileName.join("");
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const fileContents = e.target.result;
-      fileContentsDiv.innerHTML = fileContents;
-
-      handleSVGAttributes();
-    };
-    reader.readAsText(selectedFile);
-    // Open associated CSS and JSON files
-    const cssFileName = fileName.replace(/\.html$/, ".css");
-    const jsonFileName = fileName.replace(/\.html$/, ".json");
-
-    // Read CSS file contents
-    fetch(cssFileName)
-      .then((response) => response.text())
-      .then((cssContents) =>
-        console.log(`${cssFileName} Contents:\n${cssContents}`)
+const adjustSize = () => {
+  if (mySvg) {
+    const parentWidth = main?.clientWidth;
+    if (ORIGINAL_WIDTH > parentWidth) {
+      mySvg.setAttribute('width', `${parentWidth / MM_TO_PX}mm`);
+      mySvg.setAttribute(
+        'height',
+        `${(parentWidth * (ORIGINAL_HEIGHT / ORIGINAL_WIDTH)) / MM_TO_PX}mm`
       );
-
-    // Read JSON file contents
-    fetch(jsonFileName)
-      .then((response) => response.text())
-      .then((jsonContents) =>
-        console.log(`${jsonFileName} Contents:\n${jsonContents}`)
-      );
+      mySvg.childNodes.forEach((el) => {
+        if (el.nodeName.toLowerCase() !== '#text') {
+          const x1 = el?.getAttribute('x1');
+          const x2 = el?.getAttribute('x2');
+          const y1 = el?.getAttribute('y1');
+          const y2 = el?.getAttribute('y2');
+          if (x1 && x1 != '0mm') {
+            el.setAttribute('x1', `${parentWidth / MM_TO_PX}mm`);
+          }
+          if (x2 && x2 != '0mm') {
+            el.setAttribute('x2', `${parentWidth / MM_TO_PX}mm`);
+          }
+          if (y1 && y1 != '0mm') {
+            el.setAttribute(
+              'y1',
+              `${
+                (parentWidth * (ORIGINAL_HEIGHT / ORIGINAL_WIDTH)) / MM_TO_PX
+              }mm`
+            );
+          }
+          if (y2 && y2 != '0mm') {
+            el.setAttribute(
+              'y2',
+              `${
+                (parentWidth * (ORIGINAL_HEIGHT / ORIGINAL_WIDTH)) / MM_TO_PX
+              }mm`
+            );
+          }
+        }
+      });
+    } else {
+      mySvg.setAttribute('width', `${ORIGINAL_WIDTH / MM_TO_PX}mm`);
+      mySvg.setAttribute('height', `${ORIGINAL_HEIGHT / MM_TO_PX}mm`);
+      mySvg.childNodes.forEach((el) => {
+        if (el.nodeName.toLowerCase() !== '#text') {
+          const x1 = el?.getAttribute('x1');
+          const x2 = el?.getAttribute('x2');
+          const y1 = el?.getAttribute('y1');
+          const y2 = el?.getAttribute('y2');
+          if (x1 && x1 != '0mm') {
+            el.setAttribute('x1', `${ORIGINAL_WIDTH / MM_TO_PX}mm`);
+          }
+          if (x2 && x2 != '0mm') {
+            el.setAttribute('x2', `${ORIGINAL_WIDTH / MM_TO_PX}mm`);
+          }
+          if (y1 && y1 != '0mm') {
+            el.setAttribute('y1', `${ORIGINAL_HEIGHT / MM_TO_PX}mm`);
+          }
+          if (y2 && y2 != '0mm') {
+            el.setAttribute('y2', `${ORIGINAL_HEIGHT / MM_TO_PX}mm`);
+          }
+        }
+      });
+    }
   }
-});
+};
 
-function handleSVGAttributes() {
-  // Get the child div element (fileContents)
-  const fileContent = resizeContainer.querySelector("#fileContents");
+document.addEventListener('DOMContentLoaded', () => {
+  // Get the close button element
+  const closeButton = document.getElementById('closeButton');
+  const fullscreenButton = document.getElementById('fullscreenButton');
 
-  // Get the child SVG element
-  svgElement = fileContent.querySelector("svg");
+  // Attach a click event listener to the close button
+  closeButton.addEventListener('click', () => {
+    // Send a message to the main process to close the window
+    ipcRenderer.send('close-window');
+  });
+  fullscreenButton.addEventListener('click', () => {
+    ipcRenderer.send('toggle-fullscreen');
+  });
+  window.addEventListener('resize', adjustSize);
+  // Elements
+  const file = document.getElementById('file');
+  const html = document.getElementById('html');
+  const fileContent = document.getElementById('file-content');
+  main = document.getElementById('main');
+  html.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      fileContent.style.display = 'flex';
+    } else {
+      fileContent.style.display = 'none';
+    }
+  });
+  const sanitizeFileContent = (fileContentDiv) => {
+    let elem;
+    for (let i = fileContentDiv.children.length - 1; i >= 0; i--) {
+      const child = fileContentDiv.children[i];
+      if (child.tagName.toLowerCase() === 'svg') {
+        elem = child;
+        break;
+      }
+    }
+    fileContentDiv.innerHTML = '';
+    elem.setAttribute('id', 'mySvg');
+    fileContentDiv.appendChild(elem);
+    ORIGINAL_WIDTH = elem.clientWidth;
+    ORIGINAL_HEIGHT = elem.clientHeight;
+    mySvg = document.getElementById('mySvg');
+    adjustSize();
+  };
+  document.addEventListener('keydown', function (event) {
+    if (event.ctrlKey && event.key === 'o') {
+      file.click();
+    }
+  });
 
-  // Get the width and height attributes of the SVG
-  const svgWidth = svgElement.getAttribute("width");
-  const svgHeight = svgElement.getAttribute("height");
+  const readFiles = (e) => {
+    if (e.target.files.length > 0) {
+      const selectedFile = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        fileContent.innerHTML = content;
+        sanitizeFileContent(fileContent);
+        html.checked = true;
+        html.disabled = false;
+      };
+      reader.readAsText(selectedFile);
+    }
+  };
 
-  const boxWidth = fileContentsDiv.offsetWidth;
-  const boxHeight = fileContentsDiv.offsetHeight;
-
-  resizeContainer.style.width = svgWidth;
-  resizeContainer.style.height = boxHeight;
-
-  resizeContainer.addEventListener("mousedown", startResizing);
-}
-
-function startResizing(e) {
-  e.preventDefault();
-  isResizing = true;
-
-  // Get initial mouse position
-  initialX = e.clientX;
-  initialY = e.clientY;
-  initialWidth = resizeContainer.offsetWidth;
-  initialHeight = resizeContainer.offsetHeight;
-
-  // Add mousemove and mouseup event listeners to handle resizing
-  document.addEventListener("mousemove", handleResizing);
-  document.addEventListener("mouseup", stopResizing);
-}
-
-function handleResizing(e) {
-  if (!isResizing) return;
-
-  // Calculate the change in mouse position
-  const deltaX = e.clientX - initialX;
-  const deltaY = e.clientY - initialY;
-
-  // Update the width / height of the resizeContainer
-  let newWidth = initialWidth + deltaX;
-  let newHeight = initialHeight + deltaY;
-
-  // Limit the minimum height
-  newHeight = Math.max(newHeight, 50);
-  // Limit the minimum width
-  newWidth = Math.max(newWidth, 170);
-
-  svgElement.setAttribute("width", newWidth);
-  svgElement.setAttribute("height", newHeight);
-
-  // Get the maximum allowed width and height based on the parent container (main)
-  const maxWidth = main.offsetWidth;
-  const maxHeight = main.offsetHeight;
-
-  // Limit the maximum width / height of child component
-  newWidth = Math.min(newWidth, maxWidth);
-  newHeight = Math.min(newHeight, maxHeight - 80);
-
-  // Set the new width / height
-  resizeContainer.style.width = `${newWidth}px`;
-  resizeContainer.style.height = `${newHeight + 80}px`;
-
-  // Limit the maximum height / width of child according to parent container
-  const svgMaxHeight = newHeight;
-  const svgMaxWidth = newWidth;
-
-  // Set the new width / height of svg
-  svgElement.setAttribute("height", svgMaxHeight);
-  svgElement.setAttribute("width", svgMaxWidth);
-}
-
-function stopResizing() {
-  isResizing = false;
-
-  // Remove mousemove and mouseup event listeners to stop resizing
-  document.removeEventListener("mousemove", handleResizing);
-  document.removeEventListener("mouseup", stopResizing);
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  // Call handleSVGAttributes after DOMContentLoaded to handle SVG attributes
-  handleSVGAttributes();
-});
-
-document.getElementById("html").addEventListener("change", (e) => {
-  resizeContainer.style.display = e.target.checked ? "block" : "none";
+  file.addEventListener('change', readFiles);
 });

@@ -1,113 +1,117 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
+:root {
+  --caption: 10px;
+  --body: 12px;
 }
 
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+}
+
+.dragger {
+  display: flex;
+  background: #222;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.dragger .title {
+  color: #f1f1f1;
+  font-size: var(--caption);
+}
+
+.dragger .inline-btns {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 3;
+}
+
+.dragger .round-btn {
+  min-width: 12px;
+  min-height: 12px;
+  max-width: 12px;
+  max-height: 12px;
+  border-radius: 100%;
+  margin-left: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.bg-red {
+  background: #900;
+}
+
+.bg-red:hover {
+  background: #a00;
+}
+
+.bg-green {
+  background: #090;
+}
+
+.bg-green:hover {
+  background: #0a0;
 }
 
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 10px 14px;
-  border-bottom: 1px solid #aaa;
+  background-color: #f1f1f1;
+  user-select: none;
 }
 
-.switches {
+header .file {
+  border-radius: 0;
+  padding: 6px 14px;
+  border: none;
+  font-size: var(--body);
+}
+
+header .file:hover {
+  background-color: #ddd;
+}
+
+header .inline-checkbox {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
 }
 
-.switch {
+header .inline-checkbox label span {
+  margin-left: 6px;
+  font-size: var(--body);
+}
+
+header .inline-checkbox label {
+  border-radius: 0;
+  padding: 6px 14px;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: start;
-  text-transform: uppercase;
-  gap: 4px;
-  padding: 8px;
-  border: 1px solid #1f1f1f;
-  border-radius: 7.5px;
-  user-select: none;
 }
 
-.file-select {
-  border-bottom: 1px solid #aaa;
-  user-select: none;
-}
-
-.file-select label {
-  padding: 10px 14px;
-  display: inline-block;
-  background-color: #eee;
-}
-
-.file-select label:hover {
-  background-color: #aaa;
-}
-
-#file-select {
-  display: none;
-}
-
-#title {
-  font-weight: bold;
-}
-
-.gridjs-wrapper {
-  border-radius: none;
-}
-
-.gridjs-wrapper:nth-last-of-type(2) {
-  border-radius: 0;
-}
-
-.grid-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.fileContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
+header .inline-checkbox label:hover {
+  background-color: #ddd;
 }
 
 main {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(100vh - 39px - 58px);
   width: 100%;
-}
-
-#fileContents {
-  /* width: 100%; */
-  height: 100%;
-}
-
-.mainDiv {
-  margin: 0;
-  padding: 0;
+  height: calc(100vh - 22px - 25.6px);
+  background: #f1f1f1;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 80vh;
+  justify-content: center;
 }
 
-#resizeContainer {
-  width: 100%;
-  background-color: #f0f0f075;
+main #file-content{
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
