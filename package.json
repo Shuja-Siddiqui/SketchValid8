@@ -5,11 +5,14 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "nodemon --exec electron ."
+    "dev": "nodemon --exec electron .",
+    "make:exe": "electron-packager ./ --platform=win32 --arch=x64 SketchValid8",
+    "make:installer": "node build_installer"
   },
   "author": "cd-dev",
   "license": "ISC",
   "devDependencies": {
-    "electron": "9.0.0"
+    "electron": "9.0.0",
+    "electron-wix-msi": "^5.0.0"
   }
 }
