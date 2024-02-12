@@ -8,12 +8,14 @@ const createWindow = () => {
     minWidth: 270,
     minHeight: 270,
     frame: false,
+    // fullscreen: true, // Comment this in production
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
     },
   });
   win.loadFile('index.html');
+  // win.webContents.openDevTools() // Comment this in production
 };
 
 app.whenReady().then(() => {

@@ -1,12 +1,16 @@
-:root {
-  --caption: 10px;
-  --body: 12px;
-}
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+}
+
+:root {
+  --caption: 10px;
+  --body: 12px;
 }
 
 .dragger {
@@ -101,17 +105,42 @@ header .inline-checkbox label:hover {
 }
 
 main {
+  position: relative;
   width: 100%;
   height: calc(100vh - 22px - 25.6px);
   background: #f1f1f1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow: hidden;
 }
 
-main #file-content{
-  background: #fff;
+main #file-content {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.grid-row {
+  width: 100%;
+  height: 7mm;
+  overflow: hidden;
+}
+
+.grid-column {
+  display: inline-block;
+  overflow: hidden;
+  height:7mm;
+  width: 27.3mm;
+  border: 1px solid #ddd;
+  font-size: 18px;
 }
