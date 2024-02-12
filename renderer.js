@@ -79,12 +79,17 @@ const adjustSize = () => {
       }
     });
   };
-  if (mySvg) {
+  if (mySvg && main?.clientWidth <= ORIGINAL_WIDTH) {
     mySvg.setAttribute('width', `${main?.clientWidth / MM_TO_PX}mm`);
     mySvg.setAttribute(
       'height',
       `${(main?.clientWidth * (ORIGINAL_HEIGHT / ORIGINAL_WIDTH)) / MM_TO_PX}mm`
     );
+    adjustGrid(clonned);
+    recursiveAdjust(mySvg);
+  } else {
+    mySvg.setAttribute('width', `${ORIGINAL_WIDTH / MM_TO_PX}mm`);
+    mySvg.setAttribute('height', `${ORIGINAL_HEIGHT / MM_TO_PX}mm`);
     adjustGrid(clonned);
     recursiveAdjust(mySvg);
   }
@@ -261,6 +266,7 @@ function updateLineAttributes(svg, o_svg, line, o_line) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.cookie = 'cookieName=cookieValue; SameSite=None; Secure';
   makeGrid();
   // Get the close button element
   const closeButton = document.getElementById('closeButton');
@@ -306,13 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       }
     }
-    for (let i = fileContentDiv.children.length - 1; i >= 0; i--) {
-      const child = fileContentDiv.children[i];
-      if (child.tagName.toLowerCase() === 'script') {
-        document.body.appendChild(child);
-        break;
-      }
-    }
     fileContentDiv.innerHTML = '';
     elem.setAttribute('id', 'mySvg');
     fileContentDiv.appendChild(elem);
@@ -320,6 +319,16 @@ document.addEventListener('DOMContentLoaded', () => {
     ORIGINAL_HEIGHT = elem.clientHeight;
     mySvg = document.getElementById('mySvg');
     clonned = mySvg.cloneNode(true);
+    for (let i = fileContentDiv.children.length - 1; i >= 0; i--) {
+      const child = fileContentDiv.children[i];
+      if (child.tagName.toLowerCase() === 'script') {
+        setTimeout(() => {
+          const a = eval(child.innerHTML);
+          console.log(a);
+        }, 1000);
+        break;
+      }
+    }
     adjustSize();
   };
   document.addEventListener('keydown', function (event) {
