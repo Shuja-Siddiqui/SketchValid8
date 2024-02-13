@@ -12,6 +12,7 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
+      devTools: false,
     },
   });
   win.loadFile('index.html');
