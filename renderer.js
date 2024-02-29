@@ -347,7 +347,6 @@ document.addEventListener("DOMContentLoaded", () => {
      * */
     if (script.innerHTML.length !== 0) {
       resData = JSON.parse(script.innerHTML);
-      console.log('resData',resData)
       resData?.data.map((event) => {
         // Search element by its className
         var div = document.getElementsByClassName(event.ref);
