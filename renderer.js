@@ -241,6 +241,18 @@ function updateImageAttributes(svg, o_svg, image, o_image) {
   image.setAttribute("y", pxToMm(newY) + "mm");
   image.setAttribute("width", pxToMm(newWidth) + "mm");
   image.setAttribute("height", pxToMm(newHeight) + "mm");
+  // get transform attribute from svg image tag
+  if (image.getAttribute("transform")) {
+    // extract degree value from transform tag
+    const degree =
+      image
+        ?.getAttribute("transform")
+        ?.split("rotate(")
+        ?.join("")
+        ?.split(",")?.[0] || 0;
+    // set degree & newX & newY to resize image and rotate at same time
+    image.setAttribute("transform", `rotate(${degree}, ${newX}, ${newY})`);
+  }
 }
 
 function updateLineAttributes(svg, o_svg, line, o_line) {
@@ -436,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const child = htmlElement.children[i];
       if (child.tagName.toLowerCase() === "script") {
         const code = child.innerHTML;
-        runJs(code);
+        // runJs(code);
       }
     }
     loadSvg(htmlElement, elem);
