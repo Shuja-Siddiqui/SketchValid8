@@ -11,7 +11,7 @@ const msiCreator = new MSICreator({
   exe: 'SketchValid8',
   name: 'SketchValid8',
   manufacturer: 'CD_DEV_AR',
-  version: '1.0.0',
+  version: '3.0.0',
   ui: {
     chooseDirectory: true,
   },
