@@ -335,6 +335,10 @@ document.addEventListener("DOMContentLoaded", () => {
       style.innerHTML = cssFileContents;
     } else {
       style.innerHTML = "";
+      // If css is not checked then json should be unchecked
+      json.checked = false;
+      script.innerHTML = "";
+      insertDataIntoDivs();
     }
   });
 
@@ -500,11 +504,14 @@ document.addEventListener("DOMContentLoaded", () => {
       fetch(jsonFileName)
         .then((response) => response.text())
         .then((jsonContents) => {
-          jsonFileContents = jsonContents;
-          script.innerHTML = jsonFileContents;
-          insertDataIntoDivs();
-          json.checked = true;
-          json.disabled = false;
+          // If their is no css styling then dont display json content
+          if (style.innerHTML != "") {
+            jsonFileContents = jsonContents;
+            script.innerHTML = jsonFileContents;
+            insertDataIntoDivs();
+            json.checked = true;
+            json.disabled = false;
+          }
         })
         .catch(() => {
           json.disabled = true;
