@@ -333,10 +333,13 @@ document.addEventListener("DOMContentLoaded", () => {
   css.addEventListener("change", (e) => {
     if (e.target.checked) {
       style.innerHTML = cssFileContents;
+      // If css is checked then json enabled
+      json.disabled = false;
     } else {
       style.innerHTML = "";
-      // If css is not checked then json should be unchecked
+      // If css is not checked then json should be unchecked and disabled
       json.checked = false;
+      json.disabled = true;
       script.innerHTML = "";
       insertDataIntoDivs();
     }
