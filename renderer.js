@@ -320,6 +320,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let resData;
   main = document.getElementById("main");
 
+  // Reset value every time
+  file.onclick = function () {
+    this.value = null;
+  };
+
   // Toggle for HTML content
   html.addEventListener("change", (e) => {
     if (e.target.checked) {
@@ -356,6 +361,30 @@ document.addEventListener("DOMContentLoaded", () => {
       insertDataIntoDivs();
       // resData = [];
     }
+  });
+  const fs = require("fs");
+  let prevContent;
+  let newPath;
+  let prevPath;
+
+  // Listen for the 'file-changed' event from the main process
+  ipcRenderer.on("file-changed", async (event, path) => {
+    newPath = path;
+    const pathToFile = path.replace("file:\\\\", "");
+    // Read File and detect changes in prev and new file
+    fs.readFile(pathToFile, "utf8", (err, contents) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      // console.log("update", contents);
+      // console.log("statement", prevContent === contents);
+      if (prevContent !== contents) {
+        readFiles(prevPath);
+      }
+    });
+    // Call change event programmatically
+    file.addEventListener("change", readFiles);
   });
 
   function insertDataIntoDivs() {
@@ -473,17 +502,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const readFiles = (e) => {
-    if (e.target.files.length > 0) {
+    if (e?.target?.files?.length > 0) {
+      prevPath = e;
       const selectedFile = e.target.files[0];
+      selectedFile.value = "";
       const path = selectedFile.path;
       const reader = new FileReader();
       reader.onload = (e) => {
         makeGrid();
         const content = e.target.result;
         fileContent.innerHTML = content;
+        prevContent = content;
         sanitizeFileContent(fileContent);
         html.checked = true;
         html.disabled = false;
+
+        // After reading and processing the file
+        ipcRenderer.send("watch-file", path);
       };
       reader.readAsText(selectedFile);
 
