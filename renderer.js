@@ -338,6 +338,8 @@ document.addEventListener("DOMContentLoaded", () => {
   css.addEventListener("change", (e) => {
     if (e.target.checked) {
       style.innerHTML = cssFileContents;
+      // Call function to add inline styles to class
+      applyBackgroundColorsFromStyle("style");
       // If css is checked then json enabled
       json.disabled = false;
     } else {
@@ -347,6 +349,8 @@ document.addEventListener("DOMContentLoaded", () => {
       json.disabled = true;
       script.innerHTML = "";
       insertDataIntoDivs();
+      // Call function to remove inline styles of class
+      removeAppliedCSS();
     }
   });
 
@@ -403,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const style = document.createElement("style");
           // Update styling of css file
           if (event.format !== undefined && event.format !== "") {
-            style.textContent = `.${event.ref}::before {${event.format}};}`;
+            style.textContent = `.${event.ref}::before {${event.format}};`;
             // Append the style rule to the document's head
             document.head.appendChild(style);
           }
@@ -425,13 +429,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (script.innerHTML.length == 0 && resData?.data.length > 0) {
       const stylesToRemove = [];
       // populate class names to be removed
-      resData?.data.map((e) => [
-        e?.ref === "A1"
-          ? stylesToRemove.push(`.${e?.ref}::before {${e?.format}};}`)
-          : stylesToRemove.push(
-              `.${e?.ref}::before {content: '${e?.content}';}`
-            ),
-      ]);
+      resData?.data.forEach((e) => {
+        if (e?.ref === "A1") {
+          // If ref is "A1", push a specific format and content into stylesToRemove
+          stylesToRemove.push(`.${e.ref}::before {${e.format}};`);
+          // stylesToRemove.push(`.${e.ref}::before {content: '${e.content}';}`);
+        } else {
+          // For all other refs, push a content-based style into stylesToRemove
+          stylesToRemove.push(`.${e.ref}::before {content: '${e.content}';}`);
+        }
+        if (e?.ref === "A1" && e?.content != "") {
+          stylesToRemove.push(`.${e.ref}::before {content: '${e.content}';}`);
+        }
+      });
+
       // Loop through the styles to remove
       stylesToRemove.forEach((styleContent) => {
         // Find the <style> element with matching content
@@ -444,6 +455,77 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     }
+  }
+
+  function appendCss() {
+    /**
+     * Apply updated css
+     * */
+    console.log("style", style);
+    const elementB2 = document.querySelector(".grid-column.B2");
+    console.log(elementB2);
+    elementB2.style.backgroundColor = "red";
+  }
+
+  let originalCSS = {};
+
+  function applyBackgroundColorsFromStyle(styleId) {
+    /**
+     * Apply updated css using inline style
+     * */
+    // Extract styles from the <style> tag
+    const styleContent = document.getElementById(styleId).textContent;
+
+    // Regex to match class names and their background color
+    // const classRegex = /\.([A-Za-z0-9_\-]+)/g;
+    const classWithPropertiesRegex =
+      /\.([A-Za-z0-9_\-]+)::?before\s*\{([^}]*)\}/g;
+
+    let match;
+    while ((match = classWithPropertiesRegex.exec(styleContent)) !== null) {
+      const className = match[1];
+      const properties = match[2];
+      // console.log(className, properties);
+      const elements = document.querySelectorAll(`.${className}`);
+
+      elements.forEach((element) => {
+        // Store the original CSS properties
+        if (!originalCSS[className]) {
+          originalCSS[className] = {};
+        }
+        Object.assign(originalCSS[className], element.style);
+
+        // Apply background color to the element
+        // console.log("element", element);
+        element.style = properties;
+      });
+    }
+  }
+
+  function removeAppliedCSS() {
+    /**
+     * Remove updated css from inline style
+     * */
+    // console.log("Removing applied CSS");
+    // console.log("Original CSS:", originalCSS);
+
+    // Iterate over stored class names and remove applied CSS properties
+    Object.keys(originalCSS).forEach((className) => {
+      // console.log("Removing CSS for class:", className);
+      const originalProperties = originalCSS[className];
+      // console.log("Original properties:", originalProperties);
+
+      const elements = document.querySelectorAll(`.${className}`);
+      elements.forEach((element) => {
+        // Remove each applied CSS property individually
+        Object.keys(originalProperties).forEach((property) => {
+          element.style.removeProperty(property);
+        });
+      });
+    });
+
+    // Clear the stored original CSS properties
+    originalCSS = {};
   }
 
   const setOriginalScale = (width, height) => {
@@ -531,6 +613,8 @@ document.addEventListener("DOMContentLoaded", () => {
           style.innerHTML = cssFileContents;
           css.checked = true;
           css.disabled = false;
+          // Call function to add inline styles to class
+          applyBackgroundColorsFromStyle("style");
         })
         .catch(() => {
           css.disabled = true;
