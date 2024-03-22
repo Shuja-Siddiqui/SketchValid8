@@ -351,6 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
       insertDataIntoDivs();
       // Call function to remove inline styles of class
       removeAppliedCSS();
+      adjustGrid(clonned);
     }
   });
 
@@ -370,6 +371,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let prevContent;
   let newPath;
   let prevPath;
+  let prevStyle;
+  let prevCssPath;
+  let prevJson;
 
   // Listen for the 'file-changed' event from the main process
   ipcRenderer.on("file-changed", async (event, path) => {
@@ -382,12 +386,46 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       // console.log("update", contents);
-      // console.log("statement", prevContent === contents);
+      // console.log("html condition", prevContent === contents);
       if (prevContent !== contents) {
         readFiles(prevPath);
       }
     });
     // Call change event programmatically
+    file.addEventListener("change", readFiles);
+  });
+
+  // Listen for the 'css-changed' event from the main process
+  ipcRenderer.on("css-changed", async (event, path) => {
+    const pathToFile = path.replace("file:\\\\", "");
+    // Read File and detect changes in prev and new file
+    fs.readFile(pathToFile, "utf8", (err, contents) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      if (prevStyle !== contents) {
+        readFiles(prevPath);
+      }
+    });
+
+    file.addEventListener("change", readFiles);
+  });
+
+  // Listen for the 'json-changed' event from the main process
+  ipcRenderer.on("json-changed", async (event, path) => {
+    const pathToFile = path.replace("file:\\\\", "");
+    // Read File and detect changes in prev and new file
+    fs.readFile(pathToFile, "utf8", (err, contents) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      if (prevJson !== contents) {
+        readFiles(prevPath);
+      }
+    });
+
     file.addEventListener("change", readFiles);
   });
 
@@ -467,6 +505,30 @@ document.addEventListener("DOMContentLoaded", () => {
     elementB2.style.backgroundColor = "red";
   }
 
+  function mergeCells(baseColumnLetter, targetColumnLetter, rowNumber) {
+    const baseCellId = `${baseColumnLetter}${rowNumber}`;
+    const targetCellId = `${targetColumnLetter}${rowNumber}`;
+    const baseCell = document.querySelector(`.${baseCellId}`);
+    const targetCell = document.querySelector(`.${targetCellId}`);
+    const elementA1 = document.querySelector(".grid-column.A1");
+    const width = parseFloat(elementA1?.style?.width);
+    const newWidth = width * 2;
+
+    if (baseCell && targetCell) {
+      // Optionally, combine the content of the two cells
+      baseCell.textContent += ` ${targetCell.textContent}`;
+
+      // Adjust the styling to visually merge them
+      // For example, by increasing the width and hiding the border of one cell
+      baseCell.style.width = `${newWidth}mm`; // Assuming each cell is 27.3mm
+      baseCell.classList.add("merged-cell"); // You might want to add specific styling for merged cells
+
+      // Remove or hide the target cell
+      targetCell.style.display = "none"; // Hide the cell
+      // targetCell.remove(); // Or remove the cell entirely if not needed
+    }
+  }
+
   let originalCSS = {};
 
   function applyBackgroundColorsFromStyle(styleId) {
@@ -485,8 +547,25 @@ document.addEventListener("DOMContentLoaded", () => {
     while ((match = classWithPropertiesRegex.exec(styleContent)) !== null) {
       const className = match[1];
       const properties = match[2];
-      // console.log(className, properties);
       const elements = document.querySelectorAll(`.${className}`);
+      const elems = document.getElementsByClassName("grid-column");
+      const elemsRow = document.getElementsByClassName("grid-row");
+      // get height and width from A1
+      const elementA1 = document.querySelector(".grid-column.A1");
+      let columnLetter;
+      let rowNumber;
+      let nextColumnLetter;
+
+      // Apply A1 height and width on all Grid columns
+      for (let elem = 0; elem < elems.length; elem++) {
+        elems[elem].style.width = elementA1?.style?.width;
+        elems[elem].style.height = elementA1?.style?.height;
+      }
+
+      // Apply A1 height Grid Rows
+      for (let elem = 0; elem < elemsRow.length; elem++) {
+        elemsRow[elem].style.height = elementA1?.style?.height;
+      }
 
       elements.forEach((element) => {
         // Store the original CSS properties
@@ -496,9 +575,30 @@ document.addEventListener("DOMContentLoaded", () => {
         Object.assign(originalCSS[className], element.style);
 
         // Apply background color to the element
-        // console.log("element", element);
         element.style = properties;
       });
+
+      elements.forEach((element) => {
+        // Check if the style includes grid-column: span 2 or grid-row: span 1
+        if (
+          properties.includes("grid-column: span 2") ||
+          properties.includes("grid-row: span 1")
+        ) {
+          const className = element.classList[1]; // Assuming the class name follows the format 'A1', 'B1', etc.
+          columnLetter = className.charAt(0);
+          rowNumber = parseInt(className.substring(1));
+
+          // Calculate the next column letter
+          nextColumnLetter = String.fromCharCode(
+            columnLetter.charCodeAt(0) + 1
+          );
+          // Merge the current column and the next column
+          setTimeout(() => {
+            mergeCells(columnLetter, nextColumnLetter, rowNumber);
+          }, 0);
+        }
+      });
+      // mergeCells("B", "C", 2);
     }
   }
 
@@ -506,15 +606,9 @@ document.addEventListener("DOMContentLoaded", () => {
     /**
      * Remove updated css from inline style
      * */
-    // console.log("Removing applied CSS");
-    // console.log("Original CSS:", originalCSS);
-
     // Iterate over stored class names and remove applied CSS properties
     Object.keys(originalCSS).forEach((className) => {
-      // console.log("Removing CSS for class:", className);
       const originalProperties = originalCSS[className];
-      // console.log("Original properties:", originalProperties);
-
       const elements = document.querySelectorAll(`.${className}`);
       elements.forEach((element) => {
         // Remove each applied CSS property individually
@@ -599,7 +693,7 @@ document.addEventListener("DOMContentLoaded", () => {
         html.checked = true;
         html.disabled = false;
 
-        // After reading and processing the file
+        // After reading and processing the html file
         ipcRenderer.send("watch-file", path);
       };
       reader.readAsText(selectedFile);
@@ -611,10 +705,14 @@ document.addEventListener("DOMContentLoaded", () => {
         .then((cssContents) => {
           cssFileContents = cssContents;
           style.innerHTML = cssFileContents;
+          prevStyle = cssFileContents;
           css.checked = true;
           css.disabled = false;
           // Call function to add inline styles to class
           applyBackgroundColorsFromStyle("style");
+
+          // After reading and processing the css file
+          ipcRenderer.send("watch-css", cssFileName);
         })
         .catch(() => {
           css.disabled = true;
@@ -630,9 +728,11 @@ document.addEventListener("DOMContentLoaded", () => {
           if (style.innerHTML != "") {
             jsonFileContents = jsonContents;
             script.innerHTML = jsonFileContents;
+            prevJson = jsonFileContents;
             insertDataIntoDivs();
             json.checked = true;
             json.disabled = false;
+            ipcRenderer.send("watch-json", jsonFileName);
           }
         })
         .catch(() => {

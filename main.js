@@ -59,3 +59,33 @@ ipcMain.on("watch-file", (event, path) => {
     watcher.close();
   });
 });
+
+// Watch CSS file changes
+ipcMain.on("watch-css", (event, path) => {
+  const watcher = fs.watch(path, (eventType) => {
+    if (eventType === "change") {
+      console.log("Css changed:", path);
+      win.webContents.send("css-changed", path);
+    }
+  });
+
+  // Optional: Stop watching the file when the window is closed
+  win.on("closed", () => {
+    watcher.close();
+  });
+});
+
+// Watch JSON file changes
+ipcMain.on("watch-json", (event, path) => {
+  const watcher = fs.watch(path, (eventType) => {
+    if (eventType === "change") {
+      console.log("JSON changed:", path);
+      win.webContents.send("json-changed", path);
+    }
+  });
+
+  // Optional: Stop watching the file when the window is closed
+  win.on("closed", () => {
+    watcher.close();
+  });
+});
