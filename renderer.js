@@ -9,6 +9,8 @@ let main;
 let cssFileContents;
 let jsonFileContents;
 let clonned;
+let heightA1;
+let widthA1;
 const el_clonned = {};
 
 const adjustGrid = (o_svg) => {
@@ -18,8 +20,12 @@ const adjustGrid = (o_svg) => {
   let currentHeight = mySvg.getBoundingClientRect().height;
   let widthScaleFactor = currentWidth / initialWidth;
   let heightScaleFactor = currentHeight / initialHeight;
-  const newWidth = 27.3 * widthScaleFactor;
-  const newHeight = 7 * heightScaleFactor;
+  const newWidth = isNaN(parseFloat(widthA1))
+    ? 27.3
+    : parseFloat(widthA1) * widthScaleFactor;
+  const newHeight = isNaN(parseFloat(heightA1))
+    ? 7
+    : parseFloat(heightA1) * heightScaleFactor;
   const newFontSize = 32 * ((widthScaleFactor * heightScaleFactor) / 2);
   const elems = document.getElementsByClassName("grid-column");
   const elemsRow = document.getElementsByClassName("grid-row");
@@ -32,6 +38,7 @@ const adjustGrid = (o_svg) => {
     elemsRow[elem].style.height = `${newHeight}mm`;
     elemsRow[elem].style.width = mySvg.getBoundingClientRect().width;
   }
+  applyMerging("style");
 };
 
 const adjustSize = () => {
@@ -294,6 +301,70 @@ function runJs(code) {
   runCode();
 }
 
+function applyMerging(styleId) {
+  /**
+   * Fetch all grid columns
+   * */
+  const styleContent = document.getElementById(styleId).textContent;
+
+  // Regex to match class names and their background color
+  const classWithPropertiesRegex =
+    /\.([A-Za-z0-9_\-]+)::?before\s*\{([^}]*)\}/g;
+
+  let match;
+  while ((match = classWithPropertiesRegex.exec(styleContent)) !== null) {
+    const className = match[1];
+    const properties = match[2];
+    const elements = document.querySelectorAll(`.${className}`);
+    let columnLetter;
+    let rowNumber;
+    let nextColumnLetter;
+
+    elements.forEach((element) => {
+      // Check if the style includes grid-column: span 2 or grid-row: span 1
+      if (
+        properties.includes("grid-column: span 2") ||
+        properties.includes("grid-row: span 1")
+      ) {
+        const className = element.classList[1]; // Assuming the class name follows the format 'A1', 'B1', etc.
+        columnLetter = className.charAt(0);
+        rowNumber = parseInt(className.substring(1));
+
+        // Calculate the next column letter
+        nextColumnLetter = String.fromCharCode(columnLetter.charCodeAt(0) + 1);
+        // Merge the current column and the next column
+        setTimeout(() => {
+          mergeCells(columnLetter, nextColumnLetter, rowNumber);
+        }, 0);
+      }
+    });
+  }
+}
+
+function mergeCells(baseColumnLetter, targetColumnLetter, rowNumber) {
+  const baseCellId = `${baseColumnLetter}${rowNumber}`;
+  const targetCellId = `${targetColumnLetter}${rowNumber}`;
+  const baseCell = document.querySelector(`.${baseCellId}`);
+  const targetCell = document.querySelector(`.${targetCellId}`);
+  const elementA1 = document.querySelector(".grid-column.A1");
+  const width = parseFloat(elementA1?.style?.width);
+  const newWidth = width * 2;
+
+  if (baseCell && targetCell) {
+    // Optionally, combine the content of the two cells
+    baseCell.textContent += ` ${targetCell.textContent}`;
+
+    // Adjust the styling to visually merge them
+    // For example, by increasing the width and hiding the border of one cell
+    baseCell.style.width = `${newWidth}mm`; // Assuming each cell is 27.3mm
+    baseCell.classList.add("merged-cell"); // You might want to add specific styling for merged cells
+
+    // Remove or hide the target cell
+    targetCell.style.display = "none"; // Hide the cell
+    // targetCell.remove(); // Or remove the cell entirely if not needed
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Get the close button element
   const closeButton = document.getElementById("closeButton");
@@ -552,6 +623,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const elemsRow = document.getElementsByClassName("grid-row");
       // get height and width from A1
       const elementA1 = document.querySelector(".grid-column.A1");
+      widthA1 = elementA1?.style?.width;
+      heightA1 = elementA1?.style?.height;
       let columnLetter;
       let rowNumber;
       let nextColumnLetter;
@@ -718,6 +791,9 @@ document.addEventListener("DOMContentLoaded", () => {
           css.disabled = true;
           css.checked = false;
         });
+      // Empty script tag for the first time
+      script.innerHTML = "";
+      insertDataIntoDivs();
 
       // Open associated JSON file
       const jsonFileName = path.replace(/\.html$/, ".json");
