@@ -11,6 +11,7 @@ let jsonFileContents;
 let clonned;
 let heightA1;
 let widthA1;
+let fileName = "";
 const el_clonned = {};
 
 const adjustGrid = (o_svg) => {
@@ -422,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
       insertDataIntoDivs();
       // Call function to remove inline styles of class
       removeAppliedCSS();
-      adjustGrid(clonned);
     }
   });
 
@@ -667,6 +667,14 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           // Merge the current column and the next column
           setTimeout(() => {
+            console.log('timeout')
+            // Apply A1 height and width on all Grid columns
+            // for (let elem = 0; elem < elems.length; elem++) {
+            //   elems[elem].style.width = elementA1?.style?.width;
+            //   elems[elem].style.height = elementA1?.style?.height;
+            // }
+
+            // merge cells
             mergeCells(columnLetter, nextColumnLetter, rowNumber);
           }, 0);
         }
@@ -684,9 +692,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const originalProperties = originalCSS[className];
       const elements = document.querySelectorAll(`.${className}`);
       elements.forEach((element) => {
-        // Remove each applied CSS property individually
+        // Remove each applied CSS property individually, except for height and width
         Object.keys(originalProperties).forEach((property) => {
-          element.style.removeProperty(property);
+          if (property !== "height" && property !== "width") {
+            // Skip height and width
+            element.style.removeProperty(property);
+          }
         });
       });
     });
@@ -756,6 +767,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedFile = e.target.files[0];
       selectedFile.value = "";
       const path = selectedFile.path;
+      const fileNameOnly = path.match(/([^\\]+)\.\w+$/)[1];
+      // check if file name is changed
+      // if (fileName !== "") {
+      //   if (fileName !== fileNameOnly) {
+      //     console.log("reset dom");
+      //     fileContent.innerHTML = "";
+      //     style.innerHTML = "";
+      //     script.innerHTML = "";
+      //     // reset file name to default
+      //     fileName = "";
+      //   }
+      // } else {
+      //   // set file name
+      //   fileName = fileNameOnly;
+      // }
       const reader = new FileReader();
       reader.onload = (e) => {
         makeGrid();
@@ -778,11 +804,11 @@ document.addEventListener("DOMContentLoaded", () => {
         .then((cssContents) => {
           cssFileContents = cssContents;
           style.innerHTML = cssFileContents;
+          // Call function to add inline styles to class
+          applyBackgroundColorsFromStyle("style");
           prevStyle = cssFileContents;
           css.checked = true;
           css.disabled = false;
-          // Call function to add inline styles to class
-          applyBackgroundColorsFromStyle("style");
 
           // After reading and processing the css file
           ipcRenderer.send("watch-css", cssFileName);

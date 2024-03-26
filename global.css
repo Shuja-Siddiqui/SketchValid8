@@ -131,7 +131,7 @@ main #file-content {
 }
 
 .grid-row {
-  width: 100%;
+  width: 100% !important;
   height: 7mm;
   overflow: hidden;
 }
