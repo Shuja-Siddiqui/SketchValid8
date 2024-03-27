@@ -667,7 +667,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           // Merge the current column and the next column
           setTimeout(() => {
-            console.log('timeout')
             // Apply A1 height and width on all Grid columns
             // for (let elem = 0; elem < elems.length; elem++) {
             //   elems[elem].style.width = elementA1?.style?.width;
@@ -680,6 +679,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
       // mergeCells("B", "C", 2);
+    }
+
+    // Chaining Background Color
+    const elems = document.getElementsByClassName("grid-column");
+    for (let elem = 1; elem < elems.length; elem++) {
+      // const currentBackground = getComputedStyle(elems[elem]).backgroundColor;
+      prevBackground = getComputedStyle(elems[elem - 1]).backgroundColor;
+
+      if (
+        (!elems[elem].style.background ||
+          elems[elem].style.background == "rgba(0, 0, 0, 0)") &&
+        elem !== 0
+      ) {
+        // elems[elem].style.background = arrBack[count];
+        elems[elem].style.background = prevBackground;
+      }
     }
   }
 
