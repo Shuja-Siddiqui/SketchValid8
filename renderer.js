@@ -423,6 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
       insertDataIntoDivs();
       // Call function to remove inline styles of class
       removeAppliedCSS();
+      updateBgDefault();
     }
   });
 
@@ -721,19 +722,27 @@ document.addEventListener("DOMContentLoaded", () => {
       // mergeCells("B", "C", 2);
     }
 
-    // Chaining Background Color
+    // Chaining Background Color && BorderColor
     const elems = document.getElementsByClassName("grid-column");
     for (let elem = 1; elem < elems.length; elem++) {
-      // const currentBackground = getComputedStyle(elems[elem]).backgroundColor;
       prevBackground = getComputedStyle(elems[elem - 1]).backgroundColor;
-
+      prevBorder = getComputedStyle(elems[elem - 1]).borderColor;
+      // Apply Background color
       if (
         (!elems[elem].style.background ||
           elems[elem].style.background == "rgba(0, 0, 0, 0)") &&
         elem !== 0
       ) {
-        // elems[elem].style.background = arrBack[count];
         elems[elem].style.background = prevBackground;
+      }
+
+      // Apply BorderColor
+      if (
+        (!elems[elem].style.borderColor ||
+          elems[elem].style.borderColor === "rgb(221, 221, 221)") &&
+        prevBorder !== "rgb(0, 0, 0)"
+      ) {
+        elems[elem].style.borderColor = prevBorder;
       }
     }
 
@@ -742,6 +751,19 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let elem = 0; elem < elems.length; elem++) {
       elems[elem].style.width = elementA1?.style?.width;
       elems[elem].style.height = elementA1?.style?.height;
+    }
+  }
+
+  function updateBgDefault() {
+    const elems = document.getElementsByClassName("grid-column");
+    // Set bg color to transparent
+    for (let elem = 0; elem < elems.length; elem++) {
+      elems[elem].style.background = "rgba(0, 0, 0, 0)";
+    }
+
+    // Set border color to Default
+    for (let elem = 0; elem < elems.length; elem++) {
+      elems[elem].style.borderColor = "rgb(221, 221, 221)";
     }
   }
 
