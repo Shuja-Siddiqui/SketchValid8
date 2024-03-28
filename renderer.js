@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    file.addEventListener("change", readFiles);
+    // file.addEventListener("change", readFiles);
   });
 
   // Listen for the 'json-changed' event from the main process
@@ -500,12 +500,23 @@ document.addEventListener("DOMContentLoaded", () => {
     file.addEventListener("change", readFiles);
   });
 
+  function removeDynamicStyles() {
+    // Select all <style> elements with the class 'dynamic-style' and remove them
+    document.querySelectorAll("style.dynamic-style").forEach((style) => {
+      style.remove();
+    });
+  }
+
   function insertDataIntoDivs() {
     /**
      * Handle Json file
      * Apply formatting
      * Apply updated content
      * */
+
+    // First, remove all dynamically added styles
+    removeDynamicStyles();
+    // Apply Conditions
     if (script.innerHTML.length !== 0) {
       resData = JSON.parse(script.innerHTML);
       resData?.data.map((event) => {
@@ -514,6 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Special condition for A1
         if (event.ref === "A1" && div) {
           const style = document.createElement("style");
+          style.className = "dynamic-style"; // Add this line
           // Update styling of css file
           if (event.format !== undefined && event.format !== "") {
             style.textContent = `.${event.ref}::before {${event.format}};`;
@@ -524,10 +536,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // Condition for other elements
         if (div) {
           const style = document.createElement("style");
+          style.className = "dynamic-style"; // Add this line
           // Update styling of css file
           if (event.content !== undefined && event.content !== "") {
             style.textContent = `.${event.ref}::before {content: '${event.content}';}`;
-
             // Append the style rule to the document's head
             document.head.appendChild(style);
           }
@@ -562,6 +574,40 @@ document.addEventListener("DOMContentLoaded", () => {
         if (styleElement) {
           styleElement.remove();
         }
+      });
+    }
+  }
+
+  function removeJsonStyle() {
+    if (script.innerHTML.length == 0 && resData?.data.length > 0) {
+      console.log("remove");
+      const stylesToRemove = [];
+      // populate class names to be removed
+      resData?.data.forEach((e) => {
+        if (e?.ref === "A1") {
+          // If ref is "A1", push a specific format and content into stylesToRemove
+          stylesToRemove.push(`.${e.ref}::before {${e.format}};`);
+          // stylesToRemove.push(`.${e.ref}::before {content: '${e.content}';}`);
+        } else {
+          // For all other refs, push a content-based style into stylesToRemove
+          stylesToRemove.push(`.${e.ref}::before {content: '${e.content}';}`);
+        }
+        if (e?.ref === "A1" && e?.content != "") {
+          stylesToRemove.push(`.${e.ref}::before {content: '${e.content}';}`);
+        }
+      });
+
+      // Loop through the styles to remove
+      stylesToRemove.forEach((styleContent) => {
+        // Find the <style> element with matching content
+        const styleElement = [...document.querySelectorAll("style")].find(
+          (style) => style.textContent.trim() === styleContent
+        );
+        // If found, remove the <style> element
+        // if (styleElement) {
+        // console.log("styleElement", styleElement);
+        styleElement.remove();
+        // }
       });
     }
   }
@@ -667,12 +713,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           // Merge the current column and the next column
           setTimeout(() => {
-            // Apply A1 height and width on all Grid columns
-            // for (let elem = 0; elem < elems.length; elem++) {
-            //   elems[elem].style.width = elementA1?.style?.width;
-            //   elems[elem].style.height = elementA1?.style?.height;
-            // }
-
             // merge cells
             mergeCells(columnLetter, nextColumnLetter, rowNumber);
           }, 0);
@@ -695,6 +735,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // elems[elem].style.background = arrBack[count];
         elems[elem].style.background = prevBackground;
       }
+    }
+
+    // Set A1 height and width Again for all columns
+    const elementA1 = document.querySelector(".grid-column.A1");
+    for (let elem = 0; elem < elems.length; elem++) {
+      elems[elem].style.width = elementA1?.style?.width;
+      elems[elem].style.height = elementA1?.style?.height;
     }
   }
 
@@ -787,8 +834,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // if (fileName !== "") {
       //   if (fileName !== fileNameOnly) {
       //     console.log("reset dom");
-      //     fileContent.innerHTML = "";
-      //     style.innerHTML = "";
+      //     // fileContent.innerHTML = "";
+      //     // style.innerHTML = "";
       //     script.innerHTML = "";
       //     // reset file name to default
       //     fileName = "";
@@ -833,8 +880,9 @@ document.addEventListener("DOMContentLoaded", () => {
           css.checked = false;
         });
       // Empty script tag for the first time
-      script.innerHTML = "";
-      insertDataIntoDivs();
+      // script.innerHTML = "";
+      // insertDataIntoDivs();
+      // removeJsonStyle();
 
       // Open associated JSON file
       const jsonFileName = path.replace(/\.html$/, ".json");
@@ -844,6 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // If their is no css styling then dont display json content
           if (style.innerHTML != "") {
             jsonFileContents = jsonContents;
+            script.innerHTML = "";
             script.innerHTML = jsonFileContents;
             prevJson = jsonFileContents;
             insertDataIntoDivs();
